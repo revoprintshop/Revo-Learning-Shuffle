@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revo Learning Shuffle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stock:#E9E5D8;
+    --stock-line:#CFC8B4;
+    --card:#F7F4EC;
+    --ink:#26241E;
+    --ink-soft:#726C5C;
+    --cyan:#00A7C7;
+    --magenta:#D4187A;
+    --yellow:#E8B400;
+    --key:#1A1814;
+    --brand:#C4D70E;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--stock);
+    color:var(--ink);
+    font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+    background-image: radial-gradient(var(--stock-line) 0.9px, transparent 0.9px);
+    background-size: 14px 14px;
+    background-attachment:fixed;
+  }
+
+  /* corner registration marks on the page */
+  .regmark{
+    position:fixed;
+    width:22px; height:22px;
+    pointer-events:none;
+    opacity:0.55;
+    z-index:5;
+  }
+  .regmark::before,.regmark::after{ content:""; position:absolute; background:var(--ink); }
+  .regmark::before{ left:50%; top:0; width:1px; height:100%; transform:translateX(-0.5px); }
+  .regmark::after{ top:50%; left:0; height:1px; width:100%; transform:translateY(-0.5px); }
+  .rm-tl{ top:16px; left:16px; }
+  .rm-tr{ top:16px; right:16px; }
+  .rm-bl{ bottom:16px; left:16px; }
+  .rm-br{ bottom:16px; right:16px; }
+
+  .wrap{max-width:980px;margin:0 auto;padding:52px 24px 90px;}
+
+  .colorbar{
+    display:flex;
+    gap:0;
+    height:6px;
+    margin-bottom:26px;
+    width:180px;
+  }
+  .colorbar span{ flex:1; }
+  .colorbar span:nth-child(1){ background:var(--cyan); }
+  .colorbar span:nth-child(2){ background:var(--magenta); }
+  .colorbar span:nth-child(3){ background:var(--yellow); }
+  .colorbar span:nth-child(4){ background:var(--key); }
+
+  .brandrow{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .brandmark{
+    width:16px; height:16px;
+    background:var(--brand);
+    flex:none;
+  }
+  h1{
+    font-size:26px;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0;
+    font-weight:700;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    letter-spacing:0.06em;
+    margin:14px 0 10px;
+  }
+  .sub{ color:var(--ink-soft); font-size:15px; line-height:1.6; max-width:56ch; }
+
+  .panel{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--stock-line);
+    margin-top:30px;
+    padding:28px 28px 26px;
+  }
+  .panel::before{
+    content:"";
+    position:absolute;
+    top:-1px; left:-1px;
+    width:14px; height:14px;
+    border-top:1.5px solid var(--brand);
+    border-left:1.5px solid var(--brand);
+  }
+  .panel::after{
+    content:"";
+    position:absolute;
+    bottom:-1px; right:-1px;
+    width:14px; height:14px;
+    border-bottom:1.5px solid var(--brand);
+    border-right:1.5px solid var(--brand);
+  }
+
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px; }
+  @media (max-width:640px){ .row3{grid-template-columns:1fr;} }
+
+  label{ display:block; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); letter-spacing:0.03em; margin-bottom:8px; }
+  input[type=number]{
+    width:100%; font-family:"IBM Plex Mono",monospace; font-size:21px; font-weight:500;
+    padding:10px 11px; border:1px solid var(--stock-line); background:#FFFFFB; color:var(--ink);
+  }
+  input[type=number]:focus{ outline:none; border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,167,199,0.15); }
+  .hint{ font-family:"Space Grotesk","Helvetica Neue",sans-serif; font-size:12.5px; color:var(--ink-soft); margin-top:8px; line-height:1.45; }
+
+  .modes{ display:flex; gap:8px; margin-top:24px; flex-wrap:wrap; }
+  .modes button{
+    font-family:"Space Grotesk",sans-serif; font-size:13.5px; padding:10px 16px;
+    border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer;
+    transition:background .12s, color .12s;
+  }
+  .modes button.active{ background:var(--ink); color:var(--card); }
+  .modes button:not(.active):hover{ background:rgba(0,0,0,0.04); }
+
+  .go{
+    margin-top:24px; font-family:"Space Grotesk",sans-serif; font-size:14.5px; font-weight:700;
+    padding:13px 24px; background:var(--brand); color:var(--key); border:none; cursor:pointer;
+    letter-spacing:0.01em;
+  }
+  .go:hover{ filter:brightness(1.05); }
+
+  #results{ margin-top:36px; }
+  .group-title{
+    font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:0.08em;
+    color:var(--ink); margin:34px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--ink);
+    display:flex; align-items:center; gap:8px;
+  }
+  .group-title::before{
+    content:""; width:7px; height:7px; background:var(--brand); flex:none;
+  }
+  .grid-label{ font-family:"Space Grotesk",sans-serif; font-size:13px; color:var(--ink-soft); margin:16px 0 7px; }
+  .cellgrid{ display:grid; gap:0; border:1px solid var(--stock-line); }
+  .cell{
+    border:1px dashed var(--stock-line);
+    background:#FFFFFB;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:15px;
+    font-weight:500;
+    text-align:center;
+    padding:13px 4px;
+  }
+  .cell.blank{ background:transparent; color:var(--ink-soft); border-style:dashed; }
+
+  .copyline{
+    display:flex;
+    gap:8px;
+    margin-top:9px;
+    align-items:stretch;
+  }
+  .copyline input{
+    flex:1;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:14.5px;
+    letter-spacing:0.02em;
+    padding:11px 12px;
+    border:1px solid var(--stock-line);
+    background:#FFFFFB;
+    color:var(--ink);
+  }
+  .copyline button{
+    font-family:"Space Grotesk",sans-serif;
+    font-size:13px;
+    font-weight:500;
+    padding:0 18px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--card);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copyline button.copied{ background:var(--cyan); border-color:var(--cyan); }
+
+  .note{
+    font-family:"Space Grotesk",sans-serif; font-size:12.5px; color:var(--ink-soft);
+    background:#FFFFFB; border-left:3px solid var(--cyan); padding:11px 13px; margin-top:16px; line-height:1.55;
+  }
+  .empty-state{ color:var(--ink-soft); font-family:"Space Grotesk",sans-serif; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="regmark rm-tl"></div>
+<div class="regmark rm-tr"></div>
+<div class="regmark rm-bl"></div>
+<div class="regmark rm-br"></div>
+
+<div class="wrap">
+
+  <div class="colorbar"><span></span><span></span><span></span><span></span></div>
+  <div class="brandrow">
+    <div class="brandmark"></div>
+    <h1>Revo Learning Shuffle</h1>
+  </div>
+  <div class="eyebrow">JOB TICKET — IMPOSISI N-UP</div>
+  <p class="sub">Hitung urutan halaman untuk cetak beberapa halaman sekaligus per lembar besar, supaya setelah dipotong dan ditumpuk, halaman jatuh berurutan. Hasilnya bisa langsung disalin ke Adobe PDF.</p>
+
+  <div class="panel">
+    <div class="row3">
+      <div>
+        <label for="nupCols">Kolom per lembar</label>
+        <input type="number" id="nupCols" min="1" value="4">
+      </div>
+      <div>
+        <label for="nupRows">Baris per lembar</label>
+        <input type="number" id="nupRows" min="1" value="2">
+      </div>
+      <div>
+        <label for="nupTotal">Jumlah total halaman</label>
+        <input type="number" id="nupTotal" min="1" value="16">
+      </div>
+    </div>
+    <div class="hint" style="margin-top:14px;">Contoh: kertas 32×48 cm dipotong jadi kartu A6, disusun 4 kolom × 2 baris = 8 keping per lembar.</div>
+
+    <div class="modes">
+      <button id="nupModeDuplex" class="active">2 sisi (satu kertas dibalik)</button>
+      <button id="nupModeSingle">1 sisi (lembar depan &amp; belakang terpisah)</button>
+    </div>
+
+    <button class="go" id="calcNup">Hitung susunan</button>
+  </div>
+
+  <div id="results">
+    <p class="empty-state">Hasil akan muncul di sini.</p>
+  </div>
+
+</div>
+
+<script>
+let nupMode = "duplex";
+const nupBtnDuplex = document.getElementById("nupModeDuplex");
+const nupBtnSingle = document.getElementById("nupModeSingle");
+nupBtnDuplex.onclick = () => { nupMode="duplex"; nupBtnDuplex.classList.add("active"); nupBtnSingle.classList.remove("active"); };
+nupBtnSingle.onclick = () => { nupMode="single"; nupBtnSingle.classList.add("active"); nupBtnDuplex.classList.remove("active"); };
+
+function renderGrid(container, rows, cols, matrix){
+  const g = document.createElement("div");
+  g.className = "cellgrid";
+  g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const val = matrix[r][c];
+      const cell = document.createElement("div");
+      cell.className = "cell" + (val===null ? " blank" : "");
+      cell.innerHTML = val===null ? "—" : val;
+      g.appendChild(cell);
+    }
+  }
+  container.appendChild(g);
+}
+
+function flatten(matrix){
+  const out = [];
+  for(const row of matrix){
+    for(const v of row){
+      if(v!==null) out.push(v);
+    }
+  }
+  return out;
+}
+
+function renderCopyLine(container, numbers){
+  const line = document.createElement("div");
+  line.className = "copyline";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.readOnly = true;
+  input.value = numbers.join(" ");
+  input.onfocus = () => input.select();
+  const btn = document.createElement("button");
+  btn.textContent = "Salin";
+  btn.onclick = async () => {
+    input.select();
+    try{
+      await navigator.clipboard.writeText(input.value);
+    }catch(e){
+      document.execCommand("copy");
+    }
+    btn.textContent = "Tersalin";
+    btn.classList.add("copied");
+    setTimeout(()=>{ btn.textContent="Salin"; btn.classList.remove("copied"); }, 1400);
+  };
+  line.appendChild(input);
+  line.appendChild(btn);
+  container.appendChild(line);
+}
+
+document.getElementById("calcNup").onclick = () => {
+  const cols = parseInt(document.getElementById("nupCols").value,10);
+  const rows = parseInt(document.getElementById("nupRows").value,10);
+  const total = parseInt(document.getElementById("nupTotal").value,10);
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+
+  if(!cols || !rows || !total || cols<1 || rows<1 || total<1){
+    results.innerHTML = '<p class="empty-state">Isi kolom, baris, dan jumlah halaman dengan angka yang valid.</p>';
+    return;
+  }
+
+  const perSheetPositions = cols*rows;
+  const pagesPerSheet = perSheetPositions*2;
+  const sheets = Math.ceil(total/pagesPerSheet);
+
+  for(let s=0; s<sheets; s++){
+    const startFront = s*pagesPerSheet+1;
+
+    const frontMatrix = [];
+    for(let r=0;r<rows;r++){
+      const frontRow = [];
+      for(let c=0;c<cols;c++){
+        const idx = r*cols+c;
+        const p = startFront + 2*idx;
+        frontRow.push(p<=total ? p : null);
+      }
+      frontMatrix.push(frontRow);
+    }
+
+    const backMatrix = [];
+    if(nupMode==="duplex"){
+      for(let r=0;r<rows;r++){
+        const backRow = [];
+        for(let c=0;c<cols;c++){
+          const mirroredFront = frontMatrix[r][cols-1-c];
+          const backVal = (mirroredFront!==null && mirroredFront+1<=total) ? mirroredFront+1 : null;
+          backRow.push(backVal);
+        }
+        backMatrix.push(backRow);
+      }
+    } else {
+      for(let r=0;r<rows;r++){
+        const backRow = [];
+        for(let c=0;c<cols;c++){
+          const f = frontMatrix[r][c];
+          backRow.push((f!==null && f+1<=total) ? f+1 : null);
+        }
+        backMatrix.push(backRow);
+      }
+    }
+
+    const title = document.createElement("div");
+    title.className = "group-title";
+    title.textContent = `LEMBAR ${s+1}`;
+    results.appendChild(title);
+
+    const labelF = document.createElement("div");
+    labelF.className = "grid-label";
+    labelF.textContent = "Sisi depan";
+    results.appendChild(labelF);
+    renderGrid(results, rows, cols, frontMatrix);
+
+    const labelB = document.createElement("div");
+    labelB.className = "grid-label";
+    labelB.textContent = nupMode==="duplex"
+      ? "Sisi belakang (posisi di-mirror per baris, untuk kertas yang sama dibalik)"
+      : "Sisi belakang (lembar terpisah, posisi sama seperti sisi depan)";
+    results.appendChild(labelB);
+    renderGrid(results, rows, cols, backMatrix);
+
+    const labelGab = document.createElement("div");
+    labelGab.className = "grid-label";
+    labelGab.textContent = "Gabungan depan + belakang (1 baris, siap tempel)";
+    results.appendChild(labelGab);
+    renderCopyLine(results, [...flatten(frontMatrix), ...flatten(backMatrix)]);
+  }
+
+  const note = document.createElement("div");
+  note.className = "note";
+  note.textContent = nupMode==="duplex"
+    ? "Sisi belakang sudah dihitung ter-mirror per baris supaya tiap keping punya pasangan depan-belakang yang benar (halaman 1 ketemu 2, dst) setelah kertas dipotong. Coba cetak 1 lembar dulu untuk memastikan arah balik kertas printer-mu cocok."
+    : "Sisi depan dan belakang dicetak di lembar terpisah (tidak membalik kertas yang sama), jadi posisinya tidak perlu di-mirror — tinggal dipotong dan ditumpuk/disatukan langsung sesuai posisi yang sama.";
+  results.appendChild(note);
+};
+
+document.getElementById("calcNup").click();
+</script>
+</body>
+</html>
